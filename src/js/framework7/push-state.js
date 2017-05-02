@@ -35,6 +35,11 @@ app.initPushState = function () {
 
     function handlePopState(e) {
         if (blockPopstate) return;
+        if ($('.modal.modal-in').length > 0) {
+            history.forward();
+            app.closeModal();
+            return;
+        }
         var mainView = app.mainView;
         if (!mainView) return;
         var state = e.state;
