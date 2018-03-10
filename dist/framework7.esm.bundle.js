@@ -7,11 +7,13 @@
  *
  * Released under the MIT License
  *
- * Released on: February 19, 2018
+ * Released on: March 10, 2018
  */
 
-import Template7 from 'template7';
 import $ from 'dom7';
+export { default as Dom7 } from 'dom7';
+import Template7 from 'template7';
+export { default as Template7 } from 'template7';
 import PathToRegexp from 'path-to-regexp';
 import { document as document$1, window as window$1 } from 'ssr-window';
 
@@ -766,7 +768,7 @@ class Framework7Class {
   }
 }
 
-class Framework7$1 extends Framework7Class {
+class Framework7 extends Framework7Class {
   constructor(params) {
     super(params);
 
@@ -1409,6 +1411,7 @@ var ResizeModule = {
 };
 
 /* eslint no-param-reassign: "off" */
+
 var RequestModule = {
   name: 'request',
   proto: {
@@ -2406,6 +2409,22 @@ const History = {
     History.previousState = History.state;
     History.state = state;
 
+    let hasDialog = false;
+    if ($('.popup.modal-in').length > 0) {
+      hasDialog = true;
+      app.popup.close();
+    } else if ($('.popover.modal-in').length > 0) {
+      hasDialog = true;
+      app.popover.close();
+    } else if ($('.dialog.modal-in').length > 0) {
+      hasDialog = true;
+      app.dialog.close();
+    }
+    if (hasDialog) {
+      window.history.forward();
+      return;
+    }
+
     History.allowChange = true;
     History.clearQueue();
 
@@ -2886,7 +2905,7 @@ function SwipeBack(r) {
   router.on('routerDestroy', detachEvents);
 }
 
-var redirect = function (direction, route, options) {
+function redirect (direction, route, options) {
   const router = this;
   const redirect = route.route.redirect;
   function redirectResolve(redirectUrl, redirectOptions = {}) {
@@ -2906,7 +2925,7 @@ var redirect = function (direction, route, options) {
     return router;
   }
   return router[direction](redirect, options);
-};
+}
 
 function refreshPage() {
   const router = this;
@@ -3465,6 +3484,11 @@ function navigate(navigateParams, navigateOptions = {}) {
   function asyncResolve(resolveParams, resolveOptions) {
     router.allowPageChange = false;
     let resolvedAsModal = false;
+    if (resolveOptions && resolveOptions.context) {
+      if (!route.context) route.context = resolveOptions.context;
+      else route.context = Utils.extend({}, route.context, resolveOptions.context);
+      options.route.context = route.context;
+    }
     ('popup popover sheet loginScreen actions customModal').split(' ').forEach((modalLoadProp) => {
       if (resolveParams[modalLoadProp]) {
         resolvedAsModal = true;
@@ -3669,6 +3693,7 @@ function tabRemove($oldTabEl, $newTabEl, tabRoute) {
 function modalLoad(modalType, route, loadOptions = {}) {
   const router = this;
   const app = router.app;
+
   const options = Utils.extend({
     animate: router.params.animate,
     pushState: true,
@@ -3676,7 +3701,7 @@ function modalLoad(modalType, route, loadOptions = {}) {
     on: {},
   }, loadOptions);
 
-  const modalParams = route.route[modalType];
+  const modalParams = Utils.extend({}, route.route[modalType]);
   const modalRoute = route.route;
 
   function onModalLoaded() {
@@ -4329,6 +4354,11 @@ function back(...args) {
   // Async
   function asyncResolve(resolveParams, resolveOptions) {
     router.allowPageChange = false;
+    if (resolveOptions && resolveOptions.context) {
+      if (!route.context) route.context = resolveOptions.context;
+      else route.context = Utils.extend({}, route.context, resolveOptions.context);
+      options.route.context = route.context;
+    }
     router.loadBack(resolveParams, Utils.extend(options, resolveOptions), true);
   }
   function asyncReject() {
@@ -4378,9 +4408,7 @@ function clearPreviousHistory() {
   router.saveHistory();
 }
 
- // eslint-disable-line
-
-class Router$1 extends Framework7Class {
+class Router extends Framework7Class {
   constructor(app, view) {
     super({}, [typeof view === 'undefined' ? app : view]);
     const router = this;
@@ -5408,7 +5436,7 @@ class Router$1 extends Framework7Class {
     let historyRestored;
     if (!router.params.pushState) {
       if (!initUrl) {
-        initUrl = documentUrl;
+        initUrl = '/';
       }
       if (document.location.search && initUrl.indexOf('?') < 0) {
         initUrl += document.location.search;
@@ -5423,8 +5451,6 @@ class Router$1 extends Framework7Class {
       }
       if (router.params.pushStateSeparator.length > 0 && documentUrl.indexOf(router.params.pushStateSeparator) >= 0) {
         initUrl = documentUrl.split(router.params.pushStateSeparator)[1];
-      } else {
-        initUrl = documentUrl;
       }
       router.restoreHistory();
       if (router.history.indexOf(initUrl) >= 0) {
@@ -5557,10 +5583,10 @@ class Router$1 extends Framework7Class {
   }
 }
 
-var Router = {
+var Router$1 = {
   name: 'router',
   static: {
-    Router: Router$1,
+    Router,
   },
   instance: {
     cache: {
@@ -5574,11 +5600,11 @@ var Router = {
     if (instance.app) {
       // View Router
       if (instance.params.router) {
-        instance.router = new Router$1(instance.app, instance);
+        instance.router = new Router(instance.app, instance);
       }
     } else {
       // App Router
-      instance.router = new Router$1(instance);
+      instance.router = new Router(instance);
     }
   },
 };
@@ -5720,7 +5746,7 @@ class View extends Framework7Class {
 }
 
 // Use Router
-View.use(Router);
+View.use(Router$1);
 
 function initClicks(app) {
   function handleClicks(e) {
@@ -6123,7 +6149,7 @@ function getCurrentView(app) {
   return undefined;
 }
 
-var View$2 = {
+var View$1 = {
   name: 'view',
   params: {
     view: {
@@ -6819,7 +6845,7 @@ var Subnavbar = {
   },
 };
 
-class TouchRipple$1 {
+class TouchRipple {
   constructor($el, x, y) {
     const ripple = this;
     if (!$el) return undefined;
@@ -6886,16 +6912,16 @@ class TouchRipple$1 {
   }
 }
 
-var TouchRipple$$1 = {
+var TouchRipple$1 = {
   name: 'touch-ripple',
   static: {
-    TouchRipple: TouchRipple$1,
+    TouchRipple,
   },
   create() {
     const app = this;
     app.touchRipple = {
       create(...args) {
-        return new TouchRipple$1(...args);
+        return new TouchRipple(...args);
       },
     };
   },
@@ -6908,7 +6934,7 @@ function clearDialogsQueue() {
   const dialog = dialogsQueue.shift();
   dialog.open();
 }
-class Modal$1 extends Framework7Class {
+class Modal extends Framework7Class {
   constructor(app, params) {
     super(params, [app]);
 
@@ -7020,7 +7046,7 @@ class Modal$1 extends Framework7Class {
     function transitionEnd() {
       if ($el.hasClass('modal-out')) {
         modal.onClosed();
-      } else {
+      } else if ($el.hasClass('modal-in')) {
         modal.onOpened();
       }
     }
@@ -7071,7 +7097,7 @@ class Modal$1 extends Framework7Class {
     function transitionEnd() {
       if ($el.hasClass('modal-out')) {
         modal.onClosed();
-      } else {
+      } else if ($el.hasClass('modal-in')) {
         modal.onOpened();
       }
     }
@@ -7120,7 +7146,7 @@ class Modal$1 extends Framework7Class {
   }
 }
 
-class CustomModal extends Modal$1 {
+class CustomModal extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       backdrop: true,
@@ -7192,10 +7218,10 @@ class CustomModal extends Modal$1 {
   }
 }
 
-var Modal = {
+var Modal$1 = {
   name: 'modal',
   static: {
-    Modal: Modal$1,
+    Modal,
     CustomModal,
   },
   create() {
@@ -7214,7 +7240,7 @@ var Modal = {
   },
 };
 
-class Dialog$1 extends Modal$1 {
+class Dialog extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       title: app.params.dialog.title,
@@ -7385,7 +7411,7 @@ class Dialog$1 extends Modal$1 {
   }
 }
 
-var ConstructorMethods = function (parameters = {}) {
+function ConstructorMethods (parameters = {}) {
   const {
     defaultSelector,
     constructor,
@@ -7420,9 +7446,9 @@ var ConstructorMethods = function (parameters = {}) {
     });
   }
   return methods;
-};
+}
 
-var ModalMethods = function (parameters = {}) {
+function ModalMethods (parameters = {}) {
   const { defaultSelector, constructor, app } = parameters;
   const methods = Utils.extend(
     ConstructorMethods({
@@ -7448,9 +7474,9 @@ var ModalMethods = function (parameters = {}) {
     }
   );
   return methods;
-};
+}
 
-var Dialog = {
+var Dialog$1 = {
   name: 'dialog',
   params: {
     dialog: {
@@ -7466,7 +7492,7 @@ var Dialog = {
     },
   },
   static: {
-    Dialog: Dialog$1,
+    Dialog,
   },
   create() {
     const app = this;
@@ -7475,7 +7501,7 @@ var Dialog = {
     app.dialog = Utils.extend(
       ModalMethods({
         app,
-        constructor: Dialog$1,
+        constructor: Dialog,
         defaultSelector: '.dialog.modal-in',
       }),
       {
@@ -7485,7 +7511,7 @@ var Dialog = {
           if (args.length === 2 && typeof args[1] === 'function') {
             [text, callbackOk, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             buttons: [{
@@ -7501,7 +7527,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: '<div class="dialog-input-field item-input"><div class="item-input-wrap"><input type="text" class="dialog-input"></div></div>',
@@ -7527,7 +7553,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             buttons: [
@@ -7549,7 +7575,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: `
@@ -7586,7 +7612,7 @@ var Dialog = {
           if (typeof args[1] === 'function') {
             [text, callbackOk, callbackCancel, title] = args;
           }
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? defaultDialogTitle : title,
             text,
             content: `
@@ -7614,7 +7640,7 @@ var Dialog = {
         },
         preloader(title) {
           const preloaderInner = app.theme !== 'md' ? '' : Utils.mdPreloaderContent;
-          return new Dialog$1(app, {
+          return new Dialog(app, {
             title: typeof title === 'undefined' ? app.params.dialog.preloaderTitle : title,
             content: `<div class="preloader">${preloaderInner}</div>`,
             cssClass: 'dialog-preloader',
@@ -7635,7 +7661,7 @@ var Dialog = {
             }
           }
           const infinite = typeof progress === 'undefined';
-          const dialog = new Dialog$1(app, {
+          const dialog = new Dialog(app, {
             title: typeof title === 'undefined' ? app.params.dialog.progressTitle : title,
             cssClass: 'dialog-progress',
             content: `
@@ -7653,7 +7679,7 @@ var Dialog = {
   },
 };
 
-class Popup$1 extends Modal$1 {
+class Popup extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -7735,7 +7761,7 @@ class Popup$1 extends Modal$1 {
   }
 }
 
-var Popup = {
+var Popup$1 = {
   name: 'popup',
   params: {
     popup: {
@@ -7744,13 +7770,13 @@ var Popup = {
     },
   },
   static: {
-    Popup: Popup$1,
+    Popup,
   },
   create() {
     const app = this;
     app.popup = ModalMethods({
       app,
-      constructor: Popup$1,
+      constructor: Popup,
       defaultSelector: '.popup.modal-in',
     });
   },
@@ -7766,7 +7792,7 @@ var Popup = {
   },
 };
 
-class LoginScreen$1 extends Modal$1 {
+class LoginScreen extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -7808,16 +7834,16 @@ class LoginScreen$1 extends Modal$1 {
   }
 }
 
-var LoginScreen = {
+var LoginScreen$1 = {
   name: 'loginScreen',
   static: {
-    LoginScreen: LoginScreen$1,
+    LoginScreen,
   },
   create() {
     const app = this;
     app.loginScreen = ModalMethods({
       app,
-      constructor: LoginScreen$1,
+      constructor: LoginScreen,
       defaultSelector: '.login-screen.modal-in',
     });
   },
@@ -7833,7 +7859,7 @@ var LoginScreen = {
   },
 };
 
-class Popover$1 extends Modal$1 {
+class Popover extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -8088,7 +8114,7 @@ class Popover$1 extends Modal$1 {
   }
 }
 
-var Popover = {
+var Popover$1 = {
   name: 'popover',
   params: {
     popover: {
@@ -8098,21 +8124,21 @@ var Popover = {
     },
   },
   static: {
-    Popover: Popover$1,
+    Popover,
   },
   create() {
     const app = this;
     app.popover = Utils.extend(
       ModalMethods({
         app,
-        constructor: Popover$1,
+        constructor: Popover,
         defaultSelector: '.popover.modal-in',
       }),
       {
         open(popoverEl, targetEl, animate) {
           const $popoverEl = $(popoverEl);
           let popover = $popoverEl[0].f7Modal;
-          if (!popover) popover = new Popover$1(app, { el: $popoverEl, targetEl });
+          if (!popover) popover = new Popover(app, { el: $popoverEl, targetEl });
           return popover.open(targetEl, animate);
         },
       }
@@ -8131,7 +8157,8 @@ var Popover = {
 };
 
 /* eslint indent: ["off"] */
-class Actions$1 extends Modal$1 {
+
+class Actions extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -8200,10 +8227,12 @@ class Actions$1 extends Modal$1 {
         buttonIndex = $(buttonEl).index();
         groupIndex = $(buttonEl).parents('.actions-group').index();
       }
-      const button = groups[groupIndex][buttonIndex];
-      if (button.onClick) button.onClick(actions, e);
-      if (actions.params.onClick) actions.params.onClick(actions, e);
-      if (button.close !== false) actions.close();
+      if (typeof groups !== 'undefined') {
+        const button = groups[groupIndex][buttonIndex];
+        if (button.onClick) button.onClick(actions, e);
+        if (actions.params.onClick) actions.params.onClick(actions, e);
+        if (button.close !== false) actions.close();
+      }
     }
     actions.open = function open(animate) {
       let convertToPopover = false;
@@ -8246,14 +8275,16 @@ class Actions$1 extends Modal$1 {
       } else {
         actions.$el = actions.actionsHtml ? $(actions.actionsHtml) : actions.$el;
         actions.$el[0].f7Modal = actions;
-        actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
-          $(buttonEl).on('click', buttonOnClick);
-        });
-        actions.once('actionsClosed', () => {
-          actions.$el.find('.list-button').each((groupIndex, buttonEl) => {
-            $(buttonEl).off('click', buttonOnClick);
+        if (actions.groups) {
+          actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
+            $(buttonEl).on('click', buttonOnClick);
           });
-        });
+          actions.once('actionsClosed', () => {
+            actions.$el.find('.actions-button').each((groupIndex, buttonEl) => {
+              $(buttonEl).off('click', buttonOnClick);
+            });
+          });
+        }
         originalOpen.call(actions, animate);
       }
       return actions;
@@ -8288,17 +8319,19 @@ class Actions$1 extends Modal$1 {
           actions.backdropEl === target
         ) {
           actions.close();
+        } else if (actions.params.closeByOutsideClick) {
+          actions.close();
         }
       }
     }
 
     actions.on('opened', () => {
-      if (actions.params.closeByBackdropClick) {
+      if (actions.params.closeByBackdropClick || actions.params.closeByOutsideClick) {
         app.on('click', handleClick);
       }
     });
     actions.on('close', () => {
-      if (actions.params.closeByBackdropClick) {
+      if (actions.params.closeByBackdropClick || actions.params.closeByOutsideClick) {
         app.off('click', handleClick);
       }
     });
@@ -8321,7 +8354,7 @@ class Actions$1 extends Modal$1 {
               const buttonClasses = [`actions-${button.label ? 'label' : 'button'}`];
               const { color, bg, bold, disabled, label, text, icon } = button;
               if (color) buttonClasses.push(`color-${color}`);
-              if (bg) buttonClasses.push(`bg-${color}`);
+              if (bg) buttonClasses.push(`bg-color-${bg}`);
               if (bold) buttonClasses.push('actions-button-bold');
               if (disabled) buttonClasses.push('disabled');
               if (label) {
@@ -8351,7 +8384,7 @@ class Actions$1 extends Modal$1 {
                   const itemClasses = [];
                   const { color, bg, bold, disabled, label, text, icon } = button;
                   if (color) itemClasses.push(`color-${color}`);
-                  if (bg) itemClasses.push(`bg-${bg}`);
+                  if (bg) itemClasses.push(`bg-color-${bg}`);
                   if (bold) itemClasses.push('popover-from-actions-bold');
                   if (disabled) itemClasses.push('disabled');
                   if (label) {
@@ -8392,7 +8425,7 @@ class Actions$1 extends Modal$1 {
   }
 }
 
-var Actions = {
+var Actions$1 = {
   name: 'actions',
   params: {
     actions: {
@@ -8405,13 +8438,13 @@ var Actions = {
     },
   },
   static: {
-    Actions: Actions$1,
+    Actions,
   },
   create() {
     const app = this;
     app.actions = ModalMethods({
       app,
-      constructor: Actions$1,
+      constructor: Actions,
       defaultSelector: '.actions-modal.modal-in',
     });
   },
@@ -8427,7 +8460,7 @@ var Actions = {
   },
 };
 
-class Sheet$1 extends Modal$1 {
+class Sheet extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend(
       { on: {} },
@@ -8555,7 +8588,7 @@ class Sheet$1 extends Modal$1 {
   }
 }
 
-var Sheet = {
+var Sheet$1 = {
   name: 'sheet',
   params: {
     sheet: {
@@ -8564,7 +8597,7 @@ var Sheet = {
     },
   },
   static: {
-    Sheet: Sheet$1,
+    Sheet,
   },
   create() {
     const app = this;
@@ -8575,7 +8608,7 @@ var Sheet = {
       {},
       ModalMethods({
         app,
-        constructor: Sheet$1,
+        constructor: Sheet,
         defaultSelector: '.sheet-modal.modal-in',
       })
     );
@@ -8595,7 +8628,7 @@ var Sheet = {
   },
 };
 
-class Toast$1 extends Modal$1 {
+class Toast extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -8688,10 +8721,10 @@ class Toast$1 extends Modal$1 {
   }
 }
 
-var Toast = {
+var Toast$1 = {
   name: 'toast',
   static: {
-    Toast: Toast$1,
+    Toast,
   },
   create() {
     const app = this;
@@ -8699,7 +8732,7 @@ var Toast = {
       {},
       ModalMethods({
         app,
-        constructor: Toast$1,
+        constructor: Toast,
         defaultSelector: '.toast.modal-in',
       })
     );
@@ -9773,7 +9806,7 @@ var Accordion$1 = {
   },
 };
 
-class VirtualList$1 extends Framework7Class {
+class VirtualList extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const vl = this;
@@ -10311,16 +10344,16 @@ class VirtualList$1 extends Framework7Class {
   }
 }
 
-var VirtualList = {
+var VirtualList$1 = {
   name: 'virtualList',
   static: {
-    VirtualList: VirtualList$1,
+    VirtualList,
   },
   create() {
     const app = this;
     app.virtualList = ConstructorMethods({
       defaultSelector: '.virtual-list',
-      constructor: VirtualList$1,
+      constructor: VirtualList,
       app,
       domProp: 'f7VirtualList',
     });
@@ -10468,7 +10501,13 @@ const Tab = {
       if ($oldTabEl && $oldTabEl.length > 0) {
         // Search by id
         const oldTabId = $oldTabEl.attr('id');
-        if (oldTabId) $oldTabLinkEl = $(`.tab-link[href="#${oldTabId}"]`);
+        if (oldTabId) {
+          $oldTabLinkEl = $(`.tab-link[href="#${oldTabId}"]`);
+          // Search by data-route-tab-id
+          if (!$oldTabLinkEl || ($oldTabLinkEl && $oldTabLinkEl.length === 0)) {
+            $oldTabLinkEl = $(`.tab-link[data-route-tab-id="${oldTabId}"]`);
+          }
+        }
         // Search by data-tab
         if (!$oldTabLinkEl || ($oldTabLinkEl && $oldTabLinkEl.length === 0)) {
           $('[data-tab]').each((index, tabLinkElement) => {
@@ -10537,7 +10576,7 @@ var Tabs = {
   },
 };
 
-function swipePanel$1(panel) {
+function swipePanel(panel) {
   const app = panel.app;
   Utils.extend(panel, {
     swipeable: true,
@@ -10834,7 +10873,7 @@ function swipePanel$1(panel) {
   });
 }
 
-class Panel$1 extends Framework7Class {
+class Panel extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const panel = this;
@@ -10957,7 +10996,7 @@ class Panel$1 extends Framework7Class {
   }
   initSwipePanel() {
     {
-      swipePanel$1(this);
+      swipePanel(this);
     }
   }
   destroy() {
@@ -11098,7 +11137,7 @@ class Panel$1 extends Framework7Class {
   }
 }
 
-var Panel = {
+var Panel$1 = {
   name: 'panel',
   params: {
     panel: {
@@ -11114,7 +11153,7 @@ var Panel = {
     },
   },
   static: {
-    Panel: Panel$1,
+    Panel,
   },
   instance: {
     panel: {
@@ -11174,7 +11213,7 @@ var Panel = {
         }
       },
       create(params) {
-        return new Panel$1(app, params);
+        return new Panel(app, params);
       },
       open(side, animate) {
         let panelSide = side;
@@ -11506,8 +11545,15 @@ function initAjaxForm() {
     if (!url) return;
 
     let data;
-    if (method === 'POST') data = new window.FormData($formEl[0]);
-    else data = Utils.serializeObject(app.form.convertToData($formEl[0]));
+    if (method === 'POST') {
+      if (contentType === 'application/x-www-form-urlencoded') {
+        data = app.form.convertToData($formEl[0]);
+      } else {
+        data = new window.FormData($formEl[0]);
+      }
+    } else {
+      data = Utils.serializeObject(app.form.convertToData($formEl[0]));
+    }
 
     const xhr = app.request({
       method,
@@ -11867,7 +11913,7 @@ var Radio = {
   name: 'radio',
 };
 
-class Toggle$1 extends Framework7Class {
+class Toggle extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const toggle = this;
@@ -12044,19 +12090,19 @@ class Toggle$1 extends Framework7Class {
   }
 }
 
-var Toggle = {
+var Toggle$1 = {
   name: 'toggle',
   create() {
     const app = this;
     app.toggle = ConstructorMethods({
       defaultSelector: '.toggle',
-      constructor: Toggle$1,
+      constructor: Toggle,
       app,
       domProp: 'f7Toggle',
     });
   },
   static: {
-    Toggle: Toggle$1,
+    Toggle,
   },
   on: {
     tabMounted(tabEl) {
@@ -12080,7 +12126,7 @@ var Toggle = {
   },
 };
 
-class Range$1 extends Framework7Class {
+class Range extends Framework7Class {
   constructor(app, params) {
     super(params, [app]);
     const range = this;
@@ -12463,14 +12509,14 @@ class Range$1 extends Framework7Class {
   }
 }
 
-var Range = {
+var Range$1 = {
   name: 'range',
   create() {
     const app = this;
     app.range = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.range-slider',
-        constructor: Range$1,
+        constructor: Range,
         app,
         domProp: 'f7Range',
       }),
@@ -12489,12 +12535,12 @@ var Range = {
     );
   },
   static: {
-    Range: Range$1,
+    Range,
   },
   on: {
     tabMounted(tabEl) {
       const app = this;
-      $(tabEl).find('.range-slider-init').each((index, rangeEl) => new Range$1(app, {
+      $(tabEl).find('.range-slider-init').each((index, rangeEl) => new Range(app, {
         el: rangeEl,
       }));
     },
@@ -12505,7 +12551,7 @@ var Range = {
     },
     pageInit(page) {
       const app = this;
-      page.$el.find('.range-slider-init').each((index, rangeEl) => new Range$1(app, {
+      page.$el.find('.range-slider-init').each((index, rangeEl) => new Range(app, {
         el: rangeEl,
       }));
     },
@@ -12517,7 +12563,7 @@ var Range = {
   },
 };
 
-class SmartSelect$1 extends Framework7Class {
+class SmartSelect extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const ss = this;
@@ -13165,7 +13211,7 @@ class SmartSelect$1 extends Framework7Class {
   }
 }
 
-var SmartSelect = {
+var SmartSelect$1 = {
   name: 'smartSelect',
   params: {
     smartSelect: {
@@ -13199,14 +13245,14 @@ var SmartSelect = {
     },
   },
   static: {
-    SmartSelect: SmartSelect$1,
+    SmartSelect,
   },
   create() {
     const app = this;
     app.smartSelect = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.smart-select',
-        constructor: SmartSelect$1,
+        constructor: SmartSelect,
         app,
         domProp: 'f7SmartSelect',
       }),
@@ -13268,7 +13314,7 @@ var Grid = {
   name: 'grid',
 };
 
-class Calendar$1 extends Framework7Class {
+class Calendar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const calendar = this;
@@ -13694,6 +13740,7 @@ class Calendar$1 extends Framework7Class {
     const nextMonthHtml = calendar.renderMonth(currentDate, 'next');
 
     $wrapperEl
+      .transition(0)
       .html(`${prevMonthHtml}${currentMonthHtml}${nextMonthHtml}`)
       .transform('translate3d(0,0,0)');
     calendar.$months = $wrapperEl.find('.calendar-month');
@@ -14500,7 +14547,7 @@ class Calendar$1 extends Framework7Class {
       targetEl: $inputEl,
       scrollToEl: calendar.params.scrollToInput ? $inputEl : undefined,
       content: modalContent,
-      backdrop: modalType !== 'sheet',
+      backdrop: modalType === 'popover' && app.params.popover.backdrop !== false,
       on: {
         open() {
           const modal = this;
@@ -14596,16 +14643,16 @@ class Calendar$1 extends Framework7Class {
   }
 }
 
-var Calendar = {
+var Calendar$1 = {
   name: 'calendar',
   static: {
-    Calendar: Calendar$1,
+    Calendar,
   },
   create() {
     const app = this;
     app.calendar = ConstructorMethods({
       defaultSelector: '.calendar',
-      constructor: Calendar$1,
+      constructor: Calendar,
       app,
       domProp: 'f7Calendar',
     });
@@ -14676,7 +14723,7 @@ var Calendar = {
   },
 };
 
-var pickerColumn = function (colEl, updateItems) {
+function pickerColumn (colEl, updateItems) {
   const picker = this;
   const app = picker.app;
   const $colEl = $(colEl);
@@ -14966,9 +15013,9 @@ var pickerColumn = function (colEl, updateItems) {
   };
 
   col.init();
-};
+}
 
-class Picker$1 extends Framework7Class {
+class Picker extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
     const picker = this;
@@ -15478,16 +15525,16 @@ class Picker$1 extends Framework7Class {
   }
 }
 
-var Picker = {
+var Picker$1 = {
   name: 'picker',
   static: {
-    Picker: Picker$1,
+    Picker,
   },
   create() {
     const app = this;
     app.picker = ConstructorMethods({
       defaultSelector: '.picker',
-      constructor: Picker$1,
+      constructor: Picker,
       app,
       domProp: 'f7Picker',
     });
@@ -15617,7 +15664,7 @@ var InfiniteScroll$1 = {
   },
 };
 
-class PullToRefresh$1 extends Framework7Class {
+class PullToRefresh extends Framework7Class {
   constructor(app, el) {
     super({}, [app]);
     const ptr = this;
@@ -15885,14 +15932,14 @@ class PullToRefresh$1 extends Framework7Class {
   }
 }
 
-var PullToRefresh = {
+var PullToRefresh$1 = {
   name: 'pullToRefresh',
   create() {
     const app = this;
     app.ptr = Utils.extend(
       ConstructorMethods({
         defaultSelector: '.ptr-content',
-        constructor: PullToRefresh$1,
+        constructor: PullToRefresh,
         app,
         domProp: 'f7PullToRefresh',
       }),
@@ -15911,7 +15958,7 @@ var PullToRefresh = {
     );
   },
   static: {
-    PullToRefresh: PullToRefresh$1,
+    PullToRefresh,
   },
   on: {
     tabMounted(tabEl) {
@@ -16153,7 +16200,7 @@ var Lazy$1 = {
   },
 };
 
-class DataTable$1 extends Framework7Class {
+class DataTable extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -16291,16 +16338,16 @@ class DataTable$1 extends Framework7Class {
   }
 }
 
-var DataTable = {
+var DataTable$1 = {
   name: 'dataTable',
   static: {
-    DataTable: DataTable$1,
+    DataTable,
   },
   create() {
     const app = this;
     app.dataTable = ConstructorMethods({
       defaultSelector: '.data-table',
-      constructor: DataTable$1,
+      constructor: DataTable,
       app,
       domProp: 'f7DataTable',
     });
@@ -16538,7 +16585,7 @@ var Fab$1 = {
   },
 };
 
-class Searchbar$1 extends Framework7Class {
+class Searchbar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -16825,7 +16872,7 @@ class Searchbar$1 extends Framework7Class {
         }
         sb.$disableButtonEl.css(`margin-${app.rtl ? 'left' : 'right'}`, '0px');
       }
-      if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.hide();
+      if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.addClass('hidden-by-searchbar');
       sb.$el.trigger('searchbar:enable');
       sb.emit('local::enable searchbarEnable', sb);
     }
@@ -16878,7 +16925,7 @@ class Searchbar$1 extends Framework7Class {
 
     sb.$inputEl.blur();
 
-    if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.show();
+    if (sb.$hideOnEnableEl) sb.$hideOnEnableEl.removeClass('hidden-by-searchbar');
 
     sb.$el.trigger('searchbar:disable');
     sb.emit('local::disable searchbarDisable', sb);
@@ -16923,9 +16970,9 @@ class Searchbar$1 extends Framework7Class {
 
     // Hide on search element
     if (query.length > 0 && $hideOnSearchEl) {
-      $hideOnSearchEl.hide();
+      $hideOnSearchEl.addClass('hidden-by-searchbar');
     } else if ($hideOnSearchEl) {
-      $hideOnSearchEl.show();
+      $hideOnSearchEl.removeClass('hidden-by-searchbar');
     }
     // Add active/inactive classes on overlay
     if (query.length === 0) {
@@ -17051,16 +17098,16 @@ class Searchbar$1 extends Framework7Class {
   }
 }
 
-var Searchbar = {
+var Searchbar$1 = {
   name: 'searchbar',
   static: {
-    Searchbar: Searchbar$1,
+    Searchbar,
   },
   create() {
     const app = this;
     app.searchbar = ConstructorMethods({
       defaultSelector: '.searchbar',
-      constructor: Searchbar$1,
+      constructor: Searchbar,
       app,
       domProp: 'f7Searchbar',
       addMethods: 'clear enable disable toggle search'.split(' '),
@@ -17134,7 +17181,7 @@ var Searchbar = {
   },
 };
 
-class Messages$1 extends Framework7Class {
+class Messages extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -17564,16 +17611,16 @@ class Messages$1 extends Framework7Class {
   }
 }
 
-var Messages = {
+var Messages$1 = {
   name: 'messages',
   static: {
-    Messages: Messages$1,
+    Messages,
   },
   create() {
     const app = this;
     app.messages = ConstructorMethods({
       defaultSelector: '.messages',
-      constructor: Messages$1,
+      constructor: Messages,
       app,
       domProp: 'f7Messages',
       addMethods: 'renderMessages layout scroll clear removeMessage removeMessages addMessage addMessages'.split(' '),
@@ -17610,7 +17657,7 @@ var Messages = {
   },
 };
 
-class Messagebar$1 extends Framework7Class {
+class Messagebar extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -17960,16 +18007,16 @@ class Messagebar$1 extends Framework7Class {
   }
 }
 
-var Messagebar = {
+var Messagebar$1 = {
   name: 'messagebar',
   static: {
-    Messagebar: Messagebar$1,
+    Messagebar,
   },
   create() {
     const app = this;
     app.messagebar = ConstructorMethods({
       defaultSelector: '.messagebar',
-      constructor: Messagebar$1,
+      constructor: Messagebar,
       app,
       domProp: 'f7Messagebar',
       addMethods: 'clear getValue setValue setPlaceholder resizePage focus blur attachmentsCreate attachmentsShow attachmentsHide attachmentsToggle renderAttachments sheetCreate sheetShow sheetHide sheetToggle'.split(' '),
@@ -18003,7 +18050,7 @@ var Messagebar = {
   },
 };
 
-var updateSize = function () {
+function updateSize () {
   const swiper = this;
   let width;
   let height;
@@ -18031,9 +18078,9 @@ var updateSize = function () {
     height,
     size: swiper.isHorizontal() ? width : height,
   });
-};
+}
 
-var updateSlides = function () {
+function updateSlides () {
   const swiper = this;
   const params = swiper.params;
 
@@ -18244,9 +18291,9 @@ var updateSlides = function () {
   if (params.watchSlidesProgress || params.watchSlidesVisibility) {
     swiper.updateSlidesOffset();
   }
-};
+}
 
-var updateAutoHeight = function () {
+function updateAutoHeight () {
   const swiper = this;
   const activeSlides = [];
   let newHeight = 0;
@@ -18273,17 +18320,17 @@ var updateAutoHeight = function () {
 
   // Update Height
   if (newHeight) swiper.$wrapperEl.css('height', `${newHeight}px`);
-};
+}
 
-var updateSlidesOffset = function () {
+function updateSlidesOffset () {
   const swiper = this;
   const slides = swiper.slides;
   for (let i = 0; i < slides.length; i += 1) {
     slides[i].swiperSlideOffset = swiper.isHorizontal() ? slides[i].offsetLeft : slides[i].offsetTop;
   }
-};
+}
 
-var updateSlidesProgress = function (translate = this.translate || 0) {
+function updateSlidesProgress (translate = this.translate || 0) {
   const swiper = this;
   const params = swiper.params;
 
@@ -18317,9 +18364,9 @@ var updateSlidesProgress = function (translate = this.translate || 0) {
     }
     slide.progress = rtl ? -slideProgress : slideProgress;
   }
-};
+}
 
-var updateProgress = function (translate = this.translate || 0) {
+function updateProgress (translate = this.translate || 0) {
   const swiper = this;
   const params = swiper.params;
 
@@ -18355,9 +18402,9 @@ var updateProgress = function (translate = this.translate || 0) {
   }
 
   swiper.emit('progress', progress);
-};
+}
 
-var updateSlidesClasses = function () {
+function updateSlidesClasses () {
   const swiper = this;
 
   const {
@@ -18422,9 +18469,9 @@ var updateSlidesClasses = function () {
         .addClass(params.slideDuplicatePrevClass);
     }
   }
-};
+}
 
-var updateActiveIndex = function (newActiveIndex) {
+function updateActiveIndex (newActiveIndex) {
   const swiper = this;
   const translate = swiper.rtl ? swiper.translate : -swiper.translate;
   const {
@@ -18478,9 +18525,9 @@ var updateActiveIndex = function (newActiveIndex) {
     swiper.emit('realIndexChange');
   }
   swiper.emit('slideChange');
-};
+}
 
-var updateClickedSlide = function (e) {
+function updateClickedSlide (e) {
   const swiper = this;
   const params = swiper.params;
   const slide = $(e.target).closest(`.${params.slideClass}`)[0];
@@ -18506,7 +18553,7 @@ var updateClickedSlide = function (e) {
   if (params.slideToClickedSlide && swiper.clickedIndex !== undefined && swiper.clickedIndex !== swiper.activeIndex) {
     swiper.slideToClickedSlide();
   }
-};
+}
 
 var update = {
   updateSize,
@@ -18520,7 +18567,7 @@ var update = {
   updateClickedSlide,
 };
 
-var getTranslate = function (axis = this.isHorizontal() ? 'x' : 'y') {
+function getTranslate (axis = this.isHorizontal() ? 'x' : 'y') {
   const swiper = this;
 
   const {
@@ -18535,9 +18582,9 @@ var getTranslate = function (axis = this.isHorizontal() ? 'x' : 'y') {
   if (rtl) currentTranslate = -currentTranslate;
 
   return currentTranslate || 0;
-};
+}
 
-var setTranslate = function (translate, byController) {
+function setTranslate (translate, byController) {
   const swiper = this;
   const {
     rtl, params, $wrapperEl, progress,
@@ -18577,15 +18624,15 @@ var setTranslate = function (translate, byController) {
   }
 
   swiper.emit('setTranslate', swiper.translate, byController);
-};
+}
 
-var minTranslate = function () {
+function minTranslate () {
   return (-this.snapGrid[0]);
-};
+}
 
-var maxTranslate = function () {
+function maxTranslate () {
   return (-this.snapGrid[this.snapGrid.length - 1]);
-};
+}
 
 var translate = {
   getTranslate,
@@ -18594,15 +18641,15 @@ var translate = {
   maxTranslate,
 };
 
-var setTransition = function (duration, byController) {
+function setTransition (duration, byController) {
   const swiper = this;
 
   swiper.$wrapperEl.transition(duration);
 
   swiper.emit('setTransition', duration, byController);
-};
+}
 
-var transitionStart = function (runCallbacks = true, direction) {
+function transitionStart (runCallbacks = true, direction) {
   const swiper = this;
   const { activeIndex, params, previousIndex } = swiper;
   if (params.autoHeight) {
@@ -18630,9 +18677,9 @@ var transitionStart = function (runCallbacks = true, direction) {
       swiper.emit('slidePrevTransitionStart');
     }
   }
-};
+}
 
-var transitionEnd = function (runCallbacks = true, direction) {
+function transitionEnd (runCallbacks = true, direction) {
   const swiper = this;
   const { activeIndex, previousIndex } = swiper;
   swiper.animating = false;
@@ -18659,7 +18706,7 @@ var transitionEnd = function (runCallbacks = true, direction) {
       swiper.emit('slidePrevTransitionEnd');
     }
   }
-};
+}
 
 var transition = {
   setTransition,
@@ -18667,7 +18714,7 @@ var transition = {
   transitionEnd,
 };
 
-var slideTo = function (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
+function slideTo (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   let slideIndex = index;
   if (slideIndex < 0) slideIndex = 0;
@@ -18758,9 +18805,9 @@ var slideTo = function (index = 0, speed = this.params.speed, runCallbacks = tru
   }
 
   return true;
-};
+}
 
-var slideToLoop = function (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
+function slideToLoop (index = 0, speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   let newIndex = index;
   if (swiper.params.loop) {
@@ -18768,10 +18815,10 @@ var slideToLoop = function (index = 0, speed = this.params.speed, runCallbacks =
   }
 
   return swiper.slideTo(newIndex, speed, runCallbacks, internal);
-};
+}
 
 /* eslint no-unused-vars: "off" */
-var slideNext = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slideNext (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   const { params, animating } = swiper;
   if (params.loop) {
@@ -18782,10 +18829,10 @@ var slideNext = function (speed = this.params.speed, runCallbacks = true, intern
     return swiper.slideTo(swiper.activeIndex + params.slidesPerGroup, speed, runCallbacks, internal);
   }
   return swiper.slideTo(swiper.activeIndex + params.slidesPerGroup, speed, runCallbacks, internal);
-};
+}
 
 /* eslint no-unused-vars: "off" */
-var slidePrev = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slidePrev (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   const { params, animating } = swiper;
 
@@ -18797,15 +18844,15 @@ var slidePrev = function (speed = this.params.speed, runCallbacks = true, intern
     return swiper.slideTo(swiper.activeIndex - 1, speed, runCallbacks, internal);
   }
   return swiper.slideTo(swiper.activeIndex - 1, speed, runCallbacks, internal);
-};
+}
 
 /* eslint no-unused-vars: "off" */
-var slideReset = function (speed = this.params.speed, runCallbacks = true, internal) {
+function slideReset (speed = this.params.speed, runCallbacks = true, internal) {
   const swiper = this;
   return swiper.slideTo(swiper.activeIndex, speed, runCallbacks, internal);
-};
+}
 
-var slideToClickedSlide = function () {
+function slideToClickedSlide () {
   const swiper = this;
   const { params, $wrapperEl } = swiper;
 
@@ -18848,7 +18895,7 @@ var slideToClickedSlide = function () {
   } else {
     swiper.slideTo(slideToIndex);
   }
-};
+}
 
 var slide = {
   slideTo,
@@ -18859,7 +18906,7 @@ var slide = {
   slideToClickedSlide,
 };
 
-var loopCreate = function () {
+function loopCreate () {
   const swiper = this;
   const { params, $wrapperEl } = swiper;
   // Remove duplicated slides
@@ -18900,9 +18947,9 @@ var loopCreate = function () {
   for (let i = prependSlides.length - 1; i >= 0; i -= 1) {
     $wrapperEl.prepend($(prependSlides[i].cloneNode(true)).addClass(params.slideDuplicateClass));
   }
-};
+}
 
-var loopFix = function () {
+function loopFix () {
   const swiper = this;
   const {
     params, activeIndex, slides, loopedSlides, allowSlidePrev, allowSlideNext, snapGrid, rtl,
@@ -18934,14 +18981,14 @@ var loopFix = function () {
   }
   swiper.allowSlidePrev = allowSlidePrev;
   swiper.allowSlideNext = allowSlideNext;
-};
+}
 
-var loopDestroy = function () {
+function loopDestroy () {
   const swiper = this;
   const { $wrapperEl, params, slides } = swiper;
   $wrapperEl.children(`.${params.slideClass}.${params.slideDuplicateClass}`).remove();
   slides.removeAttr('data-swiper-slide-index');
-};
+}
 
 var loop = {
   loopCreate,
@@ -18949,7 +18996,7 @@ var loop = {
   loopDestroy,
 };
 
-var setGrabCursor = function (moving) {
+function setGrabCursor (moving) {
   const swiper = this;
   if (Support.touch || !swiper.params.simulateTouch) return;
   const el = swiper.el;
@@ -18957,20 +19004,20 @@ var setGrabCursor = function (moving) {
   el.style.cursor = moving ? '-webkit-grabbing' : '-webkit-grab';
   el.style.cursor = moving ? '-moz-grabbin' : '-moz-grab';
   el.style.cursor = moving ? 'grabbing' : 'grab';
-};
+}
 
-var unsetGrabCursor = function () {
+function unsetGrabCursor () {
   const swiper = this;
   if (Support.touch) return;
   swiper.el.style.cursor = '';
-};
+}
 
 var grabCursor = {
   setGrabCursor,
   unsetGrabCursor,
 };
 
-var appendSlide = function (slides) {
+function appendSlide (slides) {
   const swiper = this;
   const { $wrapperEl, params } = swiper;
   if (params.loop) {
@@ -18989,9 +19036,9 @@ var appendSlide = function (slides) {
   if (!(params.observer && Support.observer)) {
     swiper.update();
   }
-};
+}
 
-var prependSlide = function (slides) {
+function prependSlide (slides) {
   const swiper = this;
   const { params, $wrapperEl, activeIndex } = swiper;
 
@@ -19014,9 +19061,9 @@ var prependSlide = function (slides) {
     swiper.update();
   }
   swiper.slideTo(newActiveIndex, 0, false);
-};
+}
 
-var removeSlide = function (slidesIndexes) {
+function removeSlide (slidesIndexes) {
   const swiper = this;
   const { params, $wrapperEl, activeIndex } = swiper;
 
@@ -19053,9 +19100,9 @@ var removeSlide = function (slidesIndexes) {
   } else {
     swiper.slideTo(newActiveIndex, 0, false);
   }
-};
+}
 
-var removeAllSlides = function () {
+function removeAllSlides () {
   const swiper = this;
 
   const slidesIndexes = [];
@@ -19063,7 +19110,7 @@ var removeAllSlides = function () {
     slidesIndexes.push(i);
   }
   swiper.removeSlide(slidesIndexes);
-};
+}
 
 var manipulation = {
   appendSlide,
@@ -19072,7 +19119,7 @@ var manipulation = {
   removeAllSlides,
 };
 
-var onTouchStart = function (event) {
+function onTouchStart (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
   const { params, touches } = swiper;
@@ -19139,9 +19186,9 @@ var onTouchStart = function (event) {
     }
   }
   swiper.emit('touchStart', e);
-};
+}
 
-var onTouchMove = function (event) {
+function onTouchMove (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
   const { params, touches, rtl } = swiper;
@@ -19339,9 +19386,9 @@ var onTouchMove = function (event) {
   swiper.updateProgress(data.currentTranslate);
   // Update translate
   swiper.setTranslate(data.currentTranslate);
-};
+}
 
-var onTouchEnd = function (event) {
+function onTouchEnd (event) {
   const swiper = this;
   const data = swiper.touchEventsData;
 
@@ -19591,9 +19638,9 @@ var onTouchEnd = function (event) {
       swiper.slideTo(stopIndex);
     }
   }
-};
+}
 
-var onResize = function () {
+function onResize () {
   const swiper = this;
 
   const { params, el } = swiper;
@@ -19635,9 +19682,9 @@ var onResize = function () {
   // Return locks after resize
   swiper.allowSlidePrev = allowSlidePrev;
   swiper.allowSlideNext = allowSlideNext;
-};
+}
 
-var onClick = function (e) {
+function onClick (e) {
   const swiper = this;
   if (!swiper.allowClick) {
     if (swiper.params.preventClicks) e.preventDefault();
@@ -19646,7 +19693,7 @@ var onClick = function (e) {
       e.stopImmediatePropagation();
     }
   }
-};
+}
 
 function attachEvents() {
   const swiper = this;
@@ -19738,7 +19785,7 @@ var events = {
   detachEvents,
 };
 
-var setBreakpoint = function () {
+function setBreakpoint () {
   const swiper = this;
   const { activeIndex, loopedSlides = 0, params } = swiper;
   const breakpoints = params.breakpoints;
@@ -19767,9 +19814,9 @@ var setBreakpoint = function () {
     }
     swiper.emit('breakpoint', breakPointsParams);
   }
-};
+}
 
-var getBreakpoint = function (breakpoints) {
+function getBreakpoint (breakpoints) {
   // Get breakpoint for window width
   if (!breakpoints) return undefined;
   let breakpoint = false;
@@ -19785,7 +19832,7 @@ var getBreakpoint = function (breakpoints) {
     }
   }
   return breakpoint || 'max';
-};
+}
 
 var breakpoints = { setBreakpoint, getBreakpoint };
 
@@ -19801,7 +19848,7 @@ const Browser = (function Browser() {
   };
 }());
 
-var addClasses = function () {
+function addClasses () {
   const swiper = this;
   const {
     classNames, params, rtl, $el,
@@ -19841,18 +19888,18 @@ var addClasses = function () {
   });
 
   $el.addClass(classNames.join(' '));
-};
+}
 
-var removeClasses = function () {
+function removeClasses () {
   const swiper = this;
   const { $el, classNames } = swiper;
 
   $el.removeClass(classNames.join(' '));
-};
+}
 
 var classes = { addClasses, removeClasses };
 
-var loadImage = function (imageEl, src, srcset, sizes, checkForComplete, callback) {
+function loadImage (imageEl, src, srcset, sizes, checkForComplete, callback) {
   let image;
   function onReady() {
     if (callback) callback();
@@ -19878,9 +19925,9 @@ var loadImage = function (imageEl, src, srcset, sizes, checkForComplete, callbac
     // image already loaded...
     onReady();
   }
-};
+}
 
-var preloadImages = function () {
+function preloadImages () {
   const swiper = this;
   swiper.imagesToLoad = swiper.$el.find('img');
   function onReady() {
@@ -19902,7 +19949,7 @@ var preloadImages = function () {
       onReady
     );
   }
-};
+}
 
 var images = {
   loadImage,
@@ -20068,7 +20115,7 @@ const prototypes = {
 
 const extendedDefaults = {};
 
-class Swiper$2 extends Framework7Class {
+class Swiper extends Framework7Class {
   constructor(...args) {
     let el;
     let params;
@@ -20086,8 +20133,8 @@ class Swiper$2 extends Framework7Class {
 
     Object.keys(prototypes).forEach((prototypeGroup) => {
       Object.keys(prototypes[prototypeGroup]).forEach((protoMethod) => {
-        if (!Swiper$2.prototype[protoMethod]) {
-          Swiper$2.prototype[protoMethod] = prototypes[prototypeGroup][protoMethod];
+        if (!Swiper.prototype[protoMethod]) {
+          Swiper.prototype[protoMethod] = prototypes[prototypeGroup][protoMethod];
         }
       });
     });
@@ -20141,7 +20188,7 @@ class Swiper$2 extends Framework7Class {
       const swipers = [];
       $el.each((index, containerEl) => {
         const newParams = Utils.extend({}, params, { el: containerEl });
-        swipers.push(new Swiper$2(newParams));
+        swipers.push(new Swiper(newParams));
       });
       return swipers;
     }
@@ -20458,7 +20505,7 @@ class Swiper$2 extends Framework7Class {
   }
 }
 
-var Device$3 = {
+var Device$1 = {
   name: 'device',
   proto: {
     device: Device,
@@ -20468,7 +20515,7 @@ var Device$3 = {
   },
 };
 
-var Support$3 = {
+var Support$1 = {
   name: 'support',
   proto: {
     support: Support,
@@ -20478,7 +20525,7 @@ var Support$3 = {
   },
 };
 
-var Browser$2 = {
+var Browser$1 = {
   name: 'browser',
   proto: {
     browser: Browser,
@@ -22406,6 +22453,7 @@ var Lazy$3 = {
 };
 
 /* eslint no-bitwise: ["error", { "allow": [">>"] }] */
+
 const Controller = {
   LinearSpline: function LinearSpline(x, y) {
     const binarySearch = (function search() {
@@ -22490,11 +22538,11 @@ const Controller = {
     }
     if (Array.isArray(controlled)) {
       for (let i = 0; i < controlled.length; i += 1) {
-        if (controlled[i] !== byController && controlled[i] instanceof Swiper$2) {
+        if (controlled[i] !== byController && controlled[i] instanceof Swiper) {
           setControlledTranslate(controlled[i]);
         }
       }
-    } else if (controlled instanceof Swiper$2 && byController !== controlled) {
+    } else if (controlled instanceof Swiper && byController !== controlled) {
       setControlledTranslate(controlled);
     }
   },
@@ -22517,11 +22565,11 @@ const Controller = {
     }
     if (Array.isArray(controlled)) {
       for (i = 0; i < controlled.length; i += 1) {
-        if (controlled[i] !== byController && controlled[i] instanceof Swiper$2) {
+        if (controlled[i] !== byController && controlled[i] instanceof Swiper) {
           setControlledTransition(controlled[i]);
         }
       }
-    } else if (controlled instanceof Swiper$2 && byController !== controlled) {
+    } else if (controlled instanceof Swiper && byController !== controlled) {
       setControlledTransition(controlled);
     }
   },
@@ -23429,12 +23477,11 @@ var EffectCoverflow = {
 };
 
 // Swiper Class
-// Core Modules
-// Components
-Swiper$2.use([
-  Device$3,
-  Browser$2,
-  Support$3,
+
+Swiper.use([
+  Device$1,
+  Browser$1,
+  Support$1,
   Resize,
   Observer$1,
   Virtual$1,
@@ -23510,16 +23557,16 @@ function initSwipers(swiperEl) {
   }
 }
 
-var Swiper = {
+var Swiper$1 = {
   name: 'swiper',
   static: {
-    Swiper: Swiper$2,
+    Swiper,
   },
   create() {
     const app = this;
     app.swiper = ConstructorMethods({
       defaultSelector: '.swiper-container',
-      constructor: Swiper$2,
+      constructor: Swiper,
       domProp: 'swiper',
     });
   },
@@ -23553,7 +23600,8 @@ var Swiper = {
 };
 
 /* eslint indent: ["off"] */
-class PhotoBrowser$1 extends Framework7Class {
+
+class PhotoBrowser extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -24186,7 +24234,7 @@ class PhotoBrowser$1 extends Framework7Class {
   }
 }
 
-var PhotoBrowser = {
+var PhotoBrowser$1 = {
   name: 'photoBrowser',
   params: {
     photoBrowser: {
@@ -24242,17 +24290,17 @@ var PhotoBrowser = {
     const app = this;
     app.photoBrowser = ConstructorMethods({
       defaultSelector: '.photo-browser',
-      constructor: PhotoBrowser$1,
+      constructor: PhotoBrowser,
       app,
       domProp: 'f7PhotoBrowser',
     });
   },
   static: {
-    PhotoBrowser: PhotoBrowser$1,
+    PhotoBrowser,
   },
 };
 
-class Notification$1 extends Modal$1 {
+class Notification extends Modal {
   constructor(app, params) {
     const extendedParams = Utils.extend({
       on: {},
@@ -24466,10 +24514,10 @@ class Notification$1 extends Modal$1 {
   }
 }
 
-var Notification = {
+var Notification$1 = {
   name: 'notification',
   static: {
-    Notification: Notification$1,
+    Notification,
   },
   create() {
     const app = this;
@@ -24477,7 +24525,7 @@ var Notification = {
       {},
       ModalMethods({
         app,
-        constructor: Notification$1,
+        constructor: Notification,
         defaultSelector: '.notification.modal-in',
       })
     );
@@ -24500,7 +24548,8 @@ var Notification = {
 };
 
 /* eslint "no-useless-escape": "off" */
-class Autocomplete$1 extends Framework7Class {
+
+class Autocomplete extends Framework7Class {
   constructor(app, params = {}) {
     super(params, [app]);
 
@@ -25267,7 +25316,7 @@ class Autocomplete$1 extends Framework7Class {
   }
 }
 
-var Autocomplete = {
+var Autocomplete$1 = {
   name: 'autocomplete',
   params: {
     autocomplete: {
@@ -25328,14 +25377,14 @@ var Autocomplete = {
     },
   },
   static: {
-    Autocomplete: Autocomplete$1,
+    Autocomplete,
   },
   create() {
     const app = this;
     app.autocomplete = Utils.extend(
       ConstructorMethods({
         defaultSelector: undefined,
-        constructor: Autocomplete$1,
+        constructor: Autocomplete,
         app,
         domProp: 'f7Autocomplete',
       }),
@@ -25583,7 +25632,7 @@ var Vi = {
           app.emit('viSdkReady');
           app.vi.skdReady = true;
         };
-        script.src = 'http://c.vi-serve.com/viadshtml/vi.min.js';
+        script.src = 'https://c.vi-serve.com/viadshtml/vi.min.js';
         $('head').append(script);
       },
     };
@@ -25600,12 +25649,8 @@ var Typography = {
   name: 'typography',
 };
 
-// F7 Class
-// Import Helpers
-// Core Modules
-// Core Components
 // Install Core Modules & Components
-Framework7$1.use([
+Framework7.use([
   DeviceModule,
   SupportModule,
   UtilsModule,
@@ -25613,59 +25658,59 @@ Framework7$1.use([
   RequestModule,
   TouchModule,
   ClicksModule,
-  Router,
+  Router$1,
   HistoryModule,
   StorageModule,
   Statusbar$1,
-  View$2,
+  View$1,
   Navbar$1,
   Toolbar$1,
   Subnavbar,
-  TouchRipple$$1,
-  Modal,
-  Dialog,
-  Popup,
-  LoginScreen,
-  Popover,
-  Actions,
-  Sheet,
-  Toast,
+  TouchRipple$1,
+  Modal$1,
+  Dialog$1,
+  Popup$1,
+  LoginScreen$1,
+  Popover$1,
+  Actions$1,
+  Sheet$1,
+  Toast$1,
   Preloader$1,
   Progressbar$1,
   Sortable$1,
   Swipeout$1,
   Accordion$1,
-  VirtualList,
+  VirtualList$1,
   Timeline,
   Tabs,
-  Panel,
+  Panel$1,
   Card,
   Chip,
   Form,
   Input$1,
   Checkbox,
   Radio,
-  Toggle,
-  Range,
-  SmartSelect,
+  Toggle$1,
+  Range$1,
+  SmartSelect$1,
   Grid,
-  Calendar,
-  Picker,
+  Calendar$1,
+  Picker$1,
   InfiniteScroll$1,
-  PullToRefresh,
+  PullToRefresh$1,
   Lazy$1,
-  DataTable,
+  DataTable$1,
   Fab$1,
-  Searchbar,
-  Messages,
-  Messagebar,
-  Swiper,
-  PhotoBrowser,
-  Notification,
-  Autocomplete,
+  Searchbar$1,
+  Messages$1,
+  Messagebar$1,
+  Swiper$1,
+  PhotoBrowser$1,
+  Notification$1,
+  Autocomplete$1,
   Vi,
   Typography
 ]);
 
-export { Template7, $ as Dom7, Request, Utils, Device, Support };
-export default Framework7$1;
+export default Framework7;
+export { Request, Utils, Device, Support };

@@ -32,6 +32,22 @@ const History = {
     History.previousState = History.state;
     History.state = state;
 
+    let hasDialog = false;
+    if ($('.popup.modal-in').length > 0) {
+      hasDialog = true;
+      app.popup.close();
+    } else if ($('.popover.modal-in').length > 0) {
+      hasDialog = true;
+      app.popover.close();
+    } else if ($('.dialog.modal-in').length > 0) {
+      hasDialog = true;
+      app.dialog.close();
+    }
+    if (hasDialog) {
+      window.history.forward();
+      return;
+    }
+
     History.allowChange = true;
     History.clearQueue();
 

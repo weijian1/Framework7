@@ -1041,7 +1041,7 @@ class Router extends Framework7Class {
     let historyRestored;
     if (!router.params.pushState) {
       if (!initUrl) {
-        initUrl = documentUrl;
+        initUrl = '/';
       }
       if (document.location.search && initUrl.indexOf('?') < 0) {
         initUrl += document.location.search;
@@ -1056,8 +1056,6 @@ class Router extends Framework7Class {
       }
       if (router.params.pushStateSeparator.length > 0 && documentUrl.indexOf(router.params.pushStateSeparator) >= 0) {
         initUrl = documentUrl.split(router.params.pushStateSeparator)[1];
-      } else {
-        initUrl = documentUrl;
       }
       router.restoreHistory();
       if (router.history.indexOf(initUrl) >= 0) {
