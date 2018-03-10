@@ -24,12 +24,14 @@ Support Framework7 development by [pledging on Patreon](https://www.patreon.com/
 
 Juergen Schimmoeller
 
-[Join here](https://www.patreon.com/bePatron?patAmt=100.0&exp=1&u=4109762&rid=830841)
+[Join here!](https://www.patreon.com/bePatron?patAmt=100.0&exp=1&u=4109762&rid=830841)
 
 ---
 
 ### $50+
 
+Marcelo Lopetegui L.<br>
+Bearr Dayss<br>
 Kris Reddy<br>
 Bart DJ
 
@@ -38,16 +40,14 @@ Bart DJ
 ---
 
 ### $10+
-
+Dan Boschen<br>
+Ferry van de Graaf<br>
+Denis Bousselier<br>
 Firestream<br>
 Matthew Becker<br>
 Greg Hatt<br>
 Timo Ernst<br>
 Dmitry Akinin<br>
-Adrian Maleska<br>
-Michael Kreinbihl<br>
-Todd Crowe<br>
-Thanakrit Tangtermsak<br>
 Rick Chang<br>
 Dave Billington
 
@@ -56,15 +56,15 @@ Dave Billington
 ---
 
 ### $5+
-
-Mnill<br>
-Daniel Wüst<br>
+Adrian Maleska<br>
+Travel With Lucas<br>
+Garry Lowther<br>
+Uri Bram<br>
+VOUSYS<br>
 Tirso Martínez Reyes<br>
 Zafer Ayan<br>
 Amir br<br>
 Toby Allen - Ballymaloe Cookery School<br>
-Dan Boschen<br>
-Daniel Dingemanse<br>
 Henry Blackman<br>
 Ruslan Skorynin
 
